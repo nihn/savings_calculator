@@ -1,9 +1,10 @@
-use chrono::NaiveDate;
-use std::collections::HashMap;
+use chrono::{NaiveDate, Utc};
+use simple_error::bail;
 use std::error::Error;
-use std::path::PathBuf;
+use std::fmt;
 
 static DATE_FORMAT: &str = "%Y-%m-%d";
+static TODAY: &str = "today";
 
 #[derive(Debug)]
 pub struct Record {
@@ -15,6 +16,15 @@ pub struct Record {
 pub struct Records {
     pub records: Vec<Record>,
     pub currencies: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct Currency(String);
+
+impl fmt::Display for Currency {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 pub fn parse_from_str(file_path: &str) -> Result<Records, Box<dyn Error>> {
@@ -45,4 +55,22 @@ pub fn parse_from_str(file_path: &str) -> Result<Records, Box<dyn Error>> {
         records,
         currencies,
     })
+}
+
+pub fn parse_date_from_str(date: &str) -> Result<NaiveDate, Box<dyn Error>> {
+    if date == TODAY {
+        return Ok(Utc::today().naive_local());
+    }
+    let parsed = NaiveDate::parse_from_str(date, DATE_FORMAT)?;
+    if parsed > Utc::today().naive_local() {
+        bail!("{:?} is in the future!", parsed);
+    }
+    Ok(parsed)
+}
+
+pub fn parse_currency_from_str(currency: &str) -> Result<Currency, Box<dyn Error>> {
+    if currency.len() != 3 {
+        bail!("Currency should be in three letter format, e.g. GBP, USD");
+    }
+    Ok(Currency(currency.to_uppercase()))
 }
