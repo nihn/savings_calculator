@@ -57,7 +57,10 @@ async fn main() {
             date,
             currency,
         } => {
-            let records = conversions::get_conversions(records, currency, date).await.unwrap();
+            let records = conversions::get_conversions(records, currency, date)
+                .await
+                .unwrap();
+            table::format_table(records).printstd();
         }
     };
 }

@@ -2,6 +2,7 @@ use chrono::{NaiveDate, Utc};
 use simple_error::bail;
 use std::error::Error;
 use std::fmt;
+use std::iter::Cycle;
 
 static DATE_FORMAT: &str = "%Y-%m-%d";
 static TODAY: &str = "today";
@@ -15,10 +16,10 @@ pub struct Record {
 #[derive(Debug)]
 pub struct Records {
     pub records: Vec<Record>,
-    pub currencies: Vec<String>,
+    pub currencies: Vec<Currency>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Currency(String);
 
 impl fmt::Display for Currency {
@@ -32,7 +33,7 @@ pub fn parse_from_str(file_path: &str) -> Result<Records, Box<dyn Error>> {
     let mut rdr = csv::Reader::from_path(file_path)?;
 
     let headers = rdr.headers()?.clone();
-    let currencies: Vec<String> = headers.iter().skip(1).map(String::from).collect();
+    let currencies: Vec<Currency> = headers.iter().skip(1).map(|c| Currency(c.to_string())).collect();
 
     for result in rdr.records() {
         let result_ = result?;
