@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
+use tokio;
 
 mod parse;
 mod table;
@@ -27,7 +28,8 @@ enum Command {
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let opt = SavingsCalc::from_args();
 
     match opt.cmd {
