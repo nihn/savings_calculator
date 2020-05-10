@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 mod parse;
+mod table;
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Simple script to parse and combine savings in multiple currencies")]
@@ -15,23 +16,24 @@ enum Command {
     /// Add data to our savings spreadsheet
     Add {
         /// Input csv file
-        #[structopt(parse(from_os_str))]
-        input: PathBuf,
+        #[structopt(parse(try_from_str = parse::parse_from_str))]
+        records: parse::Records,
     },
     /// Parse our shaving spreadsheet and display data
-    Show {
+    Table {
         /// Input csv file
-        #[structopt(parse(from_os_str))]
-        input: PathBuf,
+        #[structopt(parse(try_from_str = parse::parse_from_str))]
+        records: parse::Records,
     },
 }
 
 fn main() {
     let opt = SavingsCalc::from_args();
-    let input_file = match opt.cmd {
-        Command::Add { input } => input,
-        Command::Show { input } => input,
+
+    match opt.cmd {
+        Command::Table { records } => {
+            table::format_table(records).printstd();
+        }
+        Command::Add { records } => println!("Not implemented!"),
     };
-    let parsed = parse::parse(input_file).unwrap();
-    println!("{:?}", parsed);
 }
