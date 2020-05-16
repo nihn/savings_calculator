@@ -60,13 +60,13 @@ enum Command {
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         exchange_rate_date: Option<NaiveDate>,
 
-        /// Presentation period
-        #[structopt(default_value = "1 month", parse(try_from_str = parse::parse_duration_from_str))]
-        presentation_period: Duration,
-
         /// Start date - first data point >= than this date will be used
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         start_date: Option<NaiveDate>,
+
+        /// Instead of doing per data point, calculate between first and last
+        #[structopt(short = "S", long)]
+        sum: bool,
     },
 }
 
@@ -94,8 +94,8 @@ async fn main() {
             currency,
             period,
             exchange_rate_date,
-            presentation_period,
             start_date,
+            sum,
         } => {
             let records = if let Some(currency) = currency {
                 conversions::get_conversions(records, currency, exchange_rate_date)
@@ -104,12 +104,9 @@ async fn main() {
             } else {
                 records
             };
-            let averages = statistics::calculate_rolling_average(
-                records,
-                period,
-                presentation_period,
-                start_date,
-            );
+            let averages =
+                statistics::calculate_rolling_average(records, period, sum, start_date).unwrap();
+            table::format_table(averages).printstd();
         }
     };
 }

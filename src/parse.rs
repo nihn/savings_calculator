@@ -9,7 +9,7 @@ use std::iter::Cycle;
 static DATE_FORMAT: &str = "%Y-%m-%d";
 static TODAY: &str = "today";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Record {
     pub date: NaiveDate,
     pub savings: Vec<f32>,
@@ -21,7 +21,17 @@ pub struct Records {
     pub currencies: Vec<Currency>,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+impl Records {
+    pub fn records_newer_than(self, date: NaiveDate) -> Vec<Record> {
+        self.records
+            .to_vec()
+            .into_iter()
+            .filter(|r| r.date >= date)
+            .collect()
+    }
+}
+
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Currency(String);
 
 impl fmt::Display for Currency {
