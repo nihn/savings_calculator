@@ -57,7 +57,15 @@ enum Command {
 
         /// Exchange rate for date, pass `today` for Today date
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
-        date: Option<NaiveDate>,
+        exchange_rate_date: Option<NaiveDate>,
+
+        /// Presentation period
+        #[structopt(default_value = "1 month", parse(try_from_str = parse::parse_duration_from_str))]
+        presentation_period: Duration,
+
+        /// Start date
+        #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
+        start_date: Option<NaiveDate>,
     },
 }
 
@@ -84,9 +92,17 @@ async fn main() {
             records,
             currency,
             period,
-            date,
+            exchange_rate_date,
+            presentation_period,
+            start_date,
         } => {
-            println!("Not implemented");
+            let records = if let Some(currency) = currency {
+                 conversions::get_conversions(records, currency, exchange_rate_date)
+                .await
+                .unwrap()
+            } else {
+                records
+            };
         }
     };
 }
