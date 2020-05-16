@@ -33,7 +33,11 @@ pub fn parse_from_str(file_path: &str) -> Result<Records, Box<dyn Error>> {
     let mut rdr = csv::Reader::from_path(file_path)?;
 
     let headers = rdr.headers()?.clone();
-    let currencies: Vec<Currency> = headers.iter().skip(1).map(|c| Currency(c.to_string())).collect();
+    let currencies: Vec<Currency> = headers
+        .iter()
+        .skip(1)
+        .map(|c| Currency(c.to_string()))
+        .collect();
 
     for result in rdr.records() {
         let result_ = result?;
