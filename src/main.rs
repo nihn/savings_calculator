@@ -1,7 +1,5 @@
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{Duration, NaiveDate};
 use clap;
-use clap::arg_enum;
-use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio;
 
@@ -29,8 +27,8 @@ enum Command {
         #[structopt(parse(try_from_str = parse::parse_from_str))]
         records: parse::Records,
     },
-    /// Parse our shaving spreadsheet and display data
-    Table {
+    /// Parse our saving spreadsheet and display data
+    Show {
         /// Input csv file
         #[structopt(parse(try_from_str = parse::parse_from_str))]
         records: parse::Records,

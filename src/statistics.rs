@@ -1,6 +1,5 @@
 use crate::parse::{Record, Records};
 use chrono::{Duration, NaiveDate};
-use futures::StreamExt;
 
 pub fn calculate_rolling_average(
     records: Records,

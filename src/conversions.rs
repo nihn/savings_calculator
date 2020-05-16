@@ -1,12 +1,9 @@
 use crate::parse::{Currency, Record, Records};
 use chrono::NaiveDate;
 use futures::future::join_all;
-use futures::Future;
 use reqwest::{Client, Url};
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::process::exit;
-use stderrlog::new;
 
 static EBC_API_ADDR: &str = "https://api.exchangeratesapi.io";
 static DATE_FMT: &str = "%Y-%m-%d";

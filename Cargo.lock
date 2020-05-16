@@ -1307,7 +1307,6 @@ dependencies = [
  "log",
  "plotters",
  "prettytable-rs",
- "rand",
  "reqwest",
  "serde",
  "simple-error",

@@ -1,10 +1,8 @@
 use chrono::{Duration, NaiveDate, Utc};
-use core::time;
 use humantime;
 use simple_error::bail;
 use std::error::Error;
 use std::fmt;
-use std::iter::Cycle;
 
 static DATE_FORMAT: &str = "%Y-%m-%d";
 static TODAY: &str = "today";

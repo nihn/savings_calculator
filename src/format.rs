@@ -5,8 +5,6 @@ use float_ord::FloatOrd;
 use plotters::coord::IntoMonthly;
 use plotters::prelude::*;
 use prettytable::{cell, format, Cell, Row, Table};
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::io;
 use tempfile::Builder;
 use webbrowser;
