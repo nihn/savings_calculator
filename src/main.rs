@@ -1,5 +1,6 @@
 use chrono::{Duration, NaiveDate, Utc};
 use clap;
+use clap::arg_enum;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio;
@@ -9,11 +10,23 @@ mod parse;
 mod statistics;
 mod table;
 
+arg_enum! {
+    #[derive(Debug)]
+    enum Format {
+        Table,
+        Graph,
+    }
+}
+
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Simple script to parse and combine savings in multiple currencies")]
 struct SavingsCalc {
     #[structopt(subcommand)]
     cmd: Command,
+
+    /// Format of outputted data
+    #[structopt(long, possible_values = &Format::variants(), case_insensitive = true, default_value = "Table")]
+    format: Format,
 }
 
 #[derive(Debug, StructOpt)]
