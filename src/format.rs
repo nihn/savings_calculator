@@ -17,7 +17,7 @@ arg_enum! {
     }
 }
 
-static COLORS: [RGBColor; 6] = [RED, BLACK, YELLOW, BLUE, CYAN, MAGENTA];
+static COLORS: [RGBColor; 5] = [RED, BLACK, BLUE, CYAN, MAGENTA];
 
 pub fn present_results(records: Records, format: Format) {
     match format {
@@ -94,14 +94,16 @@ pub fn plot_graph(records: Records) {
     }
 
     for (i, s) in series.into_iter().enumerate() {
-        let color = &COLORS[i % COLORS.len()];
+        let style = ShapeStyle {
+            color: COLORS[i % COLORS.len()].to_rgba(),
+            filled: false,
+            stroke_width: 3,
+        };
         chart
-            .draw_series(LineSeries::new(s, color))
+            .draw_series(LineSeries::new(s, style.clone()))
             .unwrap()
             .label(records.currencies[i].to_string())
-            .legend(move |(x, y)| {
-                PathElement::new(vec![(x, y), (x + 20, y)], color)
-            });
+            .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], style.clone()));
     }
     chart
         .configure_series_labels()

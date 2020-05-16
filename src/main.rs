@@ -87,7 +87,7 @@ enum Command {
 async fn main() {
     let opt = SavingsCalc::from_args();
     match opt.cmd {
-        Command::Table { records } => {
+        Command::Show { records } => {
             format::present_results(records, opt.format);
         }
         Command::Add { records } => println!("Not implemented!"),
