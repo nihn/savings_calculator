@@ -1,4 +1,6 @@
-use chrono::{NaiveDate, Utc};
+use chrono::{Duration, NaiveDate, Utc};
+use core::time;
+use humantime;
 use simple_error::bail;
 use std::error::Error;
 use std::fmt;
@@ -78,4 +80,14 @@ pub fn parse_currency_from_str(currency: &str) -> Result<Currency, Box<dyn Error
         bail!("Currency should be in three letter format, e.g. GBP, USD");
     }
     Ok(Currency(currency.to_uppercase()))
+}
+
+pub fn parse_duration_from_str(duration: &str) -> Result<Duration, Box<dyn Error>> {
+    let duration = Duration::from_std(humantime::parse_duration(duration)?)?;
+
+    if duration < Duration::days(1) {
+        bail!("Periods lesser than 1 days are not supported!");
+    }
+
+    Ok(duration)
 }

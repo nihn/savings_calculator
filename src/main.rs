@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, Utc};
+use chrono::{Duration, NaiveDate, Utc};
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio;
@@ -41,6 +41,24 @@ enum Command {
         #[structopt(parse(try_from_str = parse::parse_currency_from_str))]
         currency: parse::Currency,
     },
+    /// Calculate averages
+    RollingAverage {
+        /// Input csv file
+        #[structopt(parse(try_from_str = parse::parse_from_str))]
+        records: parse::Records,
+
+        /// Over what period rolling average should be calculated
+        #[structopt(default_value = "1 month", parse(try_from_str = parse::parse_duration_from_str))]
+        period: Duration,
+
+        /// Currency in which should averages be presented, if not passed due per currency averages
+        #[structopt(short, long, parse(try_from_str = parse::parse_currency_from_str))]
+        currency: Option<parse::Currency>,
+
+        /// Exchange rate for date, pass `today` for Today date
+        #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
+        date: Option<NaiveDate>,
+    },
 }
 
 #[tokio::main]
@@ -61,6 +79,14 @@ async fn main() {
                 .await
                 .unwrap();
             table::format_table(records).printstd();
+        }
+        Command::RollingAverage {
+            records,
+            currency,
+            period,
+            date,
+        } => {
+            println!("Not implemented");
         }
     };
 }
