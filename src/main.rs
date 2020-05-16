@@ -5,6 +5,7 @@ use tokio;
 
 mod conversions;
 mod parse;
+mod statistics;
 mod table;
 
 #[derive(Debug, StructOpt)]
@@ -63,7 +64,7 @@ enum Command {
         #[structopt(default_value = "1 month", parse(try_from_str = parse::parse_duration_from_str))]
         presentation_period: Duration,
 
-        /// Start date
+        /// Start date - first data point >= than this date will be used
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         start_date: Option<NaiveDate>,
     },
@@ -97,12 +98,18 @@ async fn main() {
             start_date,
         } => {
             let records = if let Some(currency) = currency {
-                 conversions::get_conversions(records, currency, exchange_rate_date)
-                .await
-                .unwrap()
+                conversions::get_conversions(records, currency, exchange_rate_date)
+                    .await
+                    .unwrap()
             } else {
                 records
             };
+            let averages = statistics::calculate_rolling_average(
+                records,
+                period,
+                presentation_period,
+                start_date,
+            );
         }
     };
 }
