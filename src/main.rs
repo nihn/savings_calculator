@@ -8,7 +8,7 @@ use tokio;
 mod conversions;
 mod parse;
 mod statistics;
-mod table;
+mod format;
 
 arg_enum! {
     #[derive(Debug)]
@@ -99,7 +99,7 @@ async fn main() {
 
     match opt.cmd {
         Command::Table { records } => {
-            table::format_table(records).printstd();
+            format::format_table(records).printstd();
         }
         Command::Add { records } => println!("Not implemented!"),
         Command::Converse {
@@ -134,7 +134,7 @@ async fn main() {
                 };
             }
 
-            table::format_table(records).printstd();
+            format::format_table(records).printstd();
         }
         Command::RollingAverage {
             records,
@@ -162,7 +162,7 @@ async fn main() {
             let averages =
                 statistics::calculate_rolling_average(records, period, sum, buckets, start_date)
                     .unwrap();
-            table::format_table(averages).printstd();
+            format::format_table(averages).printstd();
         }
     };
 }
