@@ -6,17 +6,9 @@ use structopt::StructOpt;
 use tokio;
 
 mod conversions;
+mod format;
 mod parse;
 mod statistics;
-mod format;
-
-arg_enum! {
-    #[derive(Debug)]
-    enum Format {
-        Table,
-        Graph,
-    }
-}
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Simple script to parse and combine savings in multiple currencies")]
@@ -25,8 +17,8 @@ struct SavingsCalc {
     cmd: Command,
 
     /// Format of outputted data
-    #[structopt(long, possible_values = &Format::variants(), case_insensitive = true, default_value = "Table")]
-    format: Format,
+    #[structopt(long, possible_values = &format::Format::variants(), case_insensitive = true, default_value = "Table")]
+    format: format::Format,
 }
 
 #[derive(Debug, StructOpt)]
@@ -96,10 +88,9 @@ enum Command {
 #[tokio::main]
 async fn main() {
     let opt = SavingsCalc::from_args();
-
     match opt.cmd {
         Command::Table { records } => {
-            format::format_table(records).printstd();
+            format::present_results(records, opt.format);
         }
         Command::Add { records } => println!("Not implemented!"),
         Command::Converse {
@@ -134,7 +125,7 @@ async fn main() {
                 };
             }
 
-            format::format_table(records).printstd();
+            format::present_results(records, opt.format);
         }
         Command::RollingAverage {
             records,
@@ -162,7 +153,7 @@ async fn main() {
             let averages =
                 statistics::calculate_rolling_average(records, period, sum, buckets, start_date)
                     .unwrap();
-            format::format_table(averages).printstd();
+            format::present_results(averages, opt.format);
         }
     };
 }
