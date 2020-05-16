@@ -1,4 +1,5 @@
 use chrono::{Duration, NaiveDate, Utc};
+use clap;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio;
@@ -64,6 +65,11 @@ enum Command {
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         start_date: Option<NaiveDate>,
 
+        /// Show rolling average split into buckets, note that if there is not enough data points
+        /// for given granurality results may be missing
+        #[structopt(short, long, parse(try_from_str = parse::parse_duration_from_str))]
+        buckets: Option<Duration>,
+
         /// Instead of doing per data point, calculate between first and last
         #[structopt(short = "S", long)]
         sum: bool,
@@ -95,8 +101,16 @@ async fn main() {
             period,
             exchange_rate_date,
             start_date,
+            buckets,
             sum,
         } => {
+            if let Some(buckets) = buckets {
+                if buckets > period {
+                    clap::Error::value_validation_auto(
+                        "Buckets duration cannot be longer than period!".to_string(),
+                    );
+                }
+            }
             let records = if let Some(currency) = currency {
                 conversions::get_conversions(records, currency, exchange_rate_date)
                     .await
@@ -105,7 +119,8 @@ async fn main() {
                 records
             };
             let averages =
-                statistics::calculate_rolling_average(records, period, sum, start_date).unwrap();
+                statistics::calculate_rolling_average(records, period, sum, buckets, start_date)
+                    .unwrap();
             table::format_table(averages).printstd();
         }
     };

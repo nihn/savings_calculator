@@ -954,6 +954,7 @@ name = "savings_calc"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "clap",
  "csv",
  "futures",
  "humantime",

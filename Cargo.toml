@@ -19,3 +19,4 @@ stderrlog = "0.4.3"
 serde = {version = "1.0.105", features = ["derive"]}
 futures = "0.3.5"
 humantime = "2.0.0"
+clap = ""
