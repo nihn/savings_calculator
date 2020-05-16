@@ -42,6 +42,10 @@ enum Command {
 
         #[structopt(parse(try_from_str = parse::parse_currency_from_str))]
         currency: parse::Currency,
+
+        /// Add deltas between entries
+        #[structopt(short = "D", long)]
+        delta: bool,
     },
     /// Calculate averages
     RollingAverage {
@@ -89,10 +93,34 @@ async fn main() {
             records,
             date,
             currency,
+            delta,
         } => {
-            let records = conversions::get_conversions(records, currency, date)
+            let mut records = conversions::get_conversions(records, currency, date)
                 .await
                 .unwrap();
+            if delta {
+                let deltas = records
+                    .records
+                    .iter()
+                    .enumerate()
+                    .skip(1)
+                    .map(|(i, s)| parse::Record {
+                        date: s.date,
+                        savings: vec![
+                            s.savings[0],
+                            s.savings[0] - records.records[i - 1].savings[0],
+                        ],
+                    })
+                    .collect();
+                records = parse::Records {
+                    currencies: vec![
+                        records.currencies.remove(0),
+                        parse::Currency("Delta".to_string()),
+                    ],
+                    records: deltas,
+                };
+            }
+
             table::format_table(records).printstd();
         }
         Command::RollingAverage {

@@ -32,7 +32,7 @@ impl Records {
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct Currency(String);
+pub struct Currency(pub String);
 
 impl fmt::Display for Currency {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
