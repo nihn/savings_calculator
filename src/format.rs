@@ -67,7 +67,7 @@ pub fn plot_graph(records: Records) {
         .map(|r| r.savings.iter().map(|s| FloatOrd(*s)).max().unwrap())
         .max()
         .unwrap()
-        .0;
+        .0 * 1.04;
 
     let min_val = records
         .records
@@ -75,7 +75,7 @@ pub fn plot_graph(records: Records) {
         .map(|r| r.savings.iter().map(|s| FloatOrd(*s)).min().unwrap())
         .min()
         .unwrap()
-        .0;
+        .0 * 0.95;
     let mut chart = ChartBuilder::on(&root)
         .margin(10)
         .set_label_area_size(LabelAreaPosition::Left, (5i32).percent_width())
