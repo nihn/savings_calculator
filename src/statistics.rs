@@ -7,12 +7,11 @@ pub fn calculate_rolling_average(
     sum: bool,
     buckets: Option<Duration>,
     start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
 ) -> Result<Records, String> {
     let currencies = records.currencies.clone();
-    let records = match start_date {
-        Some(date) => records.records_newer_than(date),
-        None => records.records,
-    };
+    let filepath = records.filepath.clone();
+    let records = records.records_newer_older_than(start_date, end_date);
 
     let days = period.num_days() as f32;
 
@@ -44,6 +43,7 @@ pub fn calculate_rolling_average(
     Ok(Records {
         currencies,
         records: result,
+        filepath,
     })
 }
 

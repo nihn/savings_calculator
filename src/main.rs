@@ -1,5 +1,7 @@
 use chrono::{Duration, NaiveDate};
 use clap;
+use dialoguer::Confirm;
+use std::collections::HashSet;
 use structopt::StructOpt;
 use tokio;
 
@@ -26,6 +28,17 @@ enum Command {
         /// Input csv file
         #[structopt(parse(try_from_str = parse::parse_from_str))]
         records: parse::Records,
+        /// Date of the entry, if nothing is passed today will be used
+        #[structopt(short, long, default_value = "today", value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
+        date: NaiveDate,
+
+        /// Amount along with currency name, e.g. 123.45GBP
+        #[structopt(short, long, required = true)]
+        value: Vec<parse::Value>,
+
+        /// Do not write file, only show what the result would look like
+        #[structopt(long)]
+        dry_run: bool,
     },
     /// Parse our saving spreadsheet and display data
     Show {
@@ -65,12 +78,16 @@ enum Command {
         currency: Option<parse::Currency>,
 
         /// Exchange rate for date, pass `today` for Today date
-        #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
+        #[structopt(short = "E", long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         exchange_rate_date: Option<NaiveDate>,
 
         /// Start date - first data point >= than this date will be used
         #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
         start_date: Option<NaiveDate>,
+
+        /// End date - first data point <= than this date will be used
+        #[structopt(short, long, value_name = "YYYY-MM-DD", parse(try_from_str = parse::parse_date_from_str))]
+        end_date: Option<NaiveDate>,
 
         /// Show rolling average split into buckets, note that if there is not enough data points
         /// for given granurality results may be missing
@@ -90,7 +107,59 @@ async fn main() {
         Command::Show { records } => {
             format::present_results(records, opt.format);
         }
-        Command::Add { records } => println!("Not implemented!"),
+        Command::Add {
+            mut records,
+            date,
+            value,
+            dry_run,
+        } => {
+            let currencies: HashSet<_> = value.iter().map(|v| &v.currency).collect();
+            if currencies.len() != value.len() {
+                clap::Error::value_validation_auto("Duplicated currency passed!".into()).exit();
+            }
+
+            let new_currencies = currencies.into_iter().fold(vec![], |mut acc, x| {
+                if !records.currencies.contains(x) {
+                    acc.push(x);
+                }
+                acc
+            });
+            if !new_currencies.is_empty()
+                && !Confirm::new()
+                    .with_prompt(format!(
+                        "Currencies {:?} are new, are you sure you want to add them?",
+                        new_currencies
+                    ))
+                    .interact()
+                    .unwrap()
+            {
+                clap::Error::with_description("Aborting!".into(), clap::ErrorKind::InvalidValue)
+                    .exit();
+            }
+            if records.records.iter().any(|r| r.date == date) {
+                if !Confirm::new()
+                    .with_prompt(format!(
+                        "Date {} already present in dataset, do you want to modify it?",
+                        date
+                    ))
+                    .interact()
+                    .unwrap()
+                {
+                    clap::Error::with_description(
+                        "Aborting!".into(),
+                        clap::ErrorKind::InvalidValue,
+                    )
+                    .exit();
+                }
+            }
+            for value in value {
+                records.set_value(&value, date);
+            }
+            if !dry_run {
+                parse::update_csv_file(&records);
+            }
+            format::present_results(records, opt.format);
+        }
         Command::Converse {
             records,
             date,
@@ -120,6 +189,7 @@ async fn main() {
                         parse::Currency("Delta".to_string()),
                     ],
                     records: deltas,
+                    filepath: records.filepath,
                 };
             }
 
@@ -131,6 +201,7 @@ async fn main() {
             period,
             exchange_rate_date,
             start_date,
+            end_date,
             buckets,
             sum,
         } => {
@@ -141,6 +212,7 @@ async fn main() {
                     );
                 }
             }
+
             let records = if let Some(currency) = currency {
                 conversions::get_conversions(records, currency, exchange_rate_date)
                     .await
@@ -148,9 +220,10 @@ async fn main() {
             } else {
                 records
             };
-            let averages =
-                statistics::calculate_rolling_average(records, period, sum, buckets, start_date)
-                    .unwrap();
+            let averages = statistics::calculate_rolling_average(
+                records, period, sum, buckets, start_date, end_date,
+            )
+            .unwrap();
             format::present_results(averages, opt.format);
         }
     };

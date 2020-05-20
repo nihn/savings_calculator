@@ -54,8 +54,9 @@ pub async fn get_conversions(
         })
     }
     Ok(Records {
-        records: new_records,
+        records: new_records.clone(),
         currencies: vec![exchange_to],
+        filepath: records.filepath,
     })
 }
 
