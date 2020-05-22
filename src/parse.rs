@@ -81,8 +81,8 @@ impl Records {
             last = i + 1;
         }
 
-        if last == self.records.len() - 1 {
-            let mut savings = self.records[last].savings.clone();
+        if last == self.records.len() {
+            let mut savings = self.records[last - 1].savings.clone();
             savings[idx] = val.amount;
             self.records.push(Record { date, savings });
         } else if new_currency {
